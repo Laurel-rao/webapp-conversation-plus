@@ -655,56 +655,61 @@ const Main: FC<IMainProps> = () => {
     return <Loading type='app' />
 
   return (
-    <div className='bg-gray-100'>
-      <Header
-        title={APP_INFO.title}
-        isMobile={isMobile}
-        onShowSideBar={showSidebar}
-        onCreateNewChat={() => handleConversationIdChange('-1')}
-      />
-      <div className="flex rounded-t-2xl bg-white overflow-hidden">
-        {/* sidebar */}
-        {!isMobile && renderSidebar()}
-        {isMobile && isShowSidebar && (
-          <div className='fixed inset-0 z-50'
-            style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
-            onClick={hideSidebar}
-          >
-            <div className='inline-block' onClick={e => e.stopPropagation()}>
-              {renderSidebar()}
+    <div className='h-full flex flex-col'>
+      {/* 聊天配置区域 */}
+      <div className="flex-shrink-0 mb-4">
+        <ConfigSence
+          conversationName={conversationName}
+          hasSetInputs={hasSetInputs}
+          isPublicVersion={isShowPrompt}
+          siteInfo={APP_INFO}
+          promptConfig={promptConfig}
+          onStartChat={handleStartChat}
+          canEditInputs={canEditInputs}
+          savedInputs={currInputs as Record<string, any>}
+          onInputsChange={setCurrInputs}
+        />
+      </div>
+
+      {/* 移动端侧边栏覆盖层 */}
+      {isMobile && isShowSidebar && (
+        <div className='fixed inset-0 z-50'
+          style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
+          onClick={hideSidebar}
+        >
+          <div className='inline-block' onClick={e => e.stopPropagation()}>
+            {renderSidebar()}
+          </div>
+        </div>
+      )}
+
+      {/* 聊天内容区域 */}
+      {hasSetInputs && (
+        <div className='flex-1 min-h-0'>
+          <div className='h-full glass-card p-4'>
+            <div className='h-full overflow-y-auto' ref={chatListDomRef}>
+              <Chat
+                chatList={chatList}
+                onSend={handleSend}
+                onFeedback={handleFeedback}
+                isResponding={isResponding}
+                checkCanSend={checkCanSend}
+                visionConfig={visionConfig}
+              />
             </div>
           </div>
-        )}
-        {/* main */}
-        <div className='flex-grow flex flex-col h-[calc(100vh_-_3rem)] overflow-y-auto'>
-          <ConfigSence
-            conversationName={conversationName}
-            hasSetInputs={hasSetInputs}
-            isPublicVersion={isShowPrompt}
-            siteInfo={APP_INFO}
-            promptConfig={promptConfig}
-            onStartChat={handleStartChat}
-            canEditInputs={canEditInputs}
-            savedInputs={currInputs as Record<string, any>}
-            onInputsChange={setCurrInputs}
-          ></ConfigSence>
-
-          {
-            hasSetInputs && (
-              <div className='relative grow h-[200px] pc:w-[794px] max-w-full mobile:w-full pb-[66px] mx-auto mb-3.5 overflow-hidden'>
-                <div className='h-full overflow-y-auto' ref={chatListDomRef}>
-                  <Chat
-                    chatList={chatList}
-                    onSend={handleSend}
-                    onFeedback={handleFeedback}
-                    isResponding={isResponding}
-                    checkCanSend={checkCanSend}
-                    visionConfig={visionConfig}
-                  />
-                </div>
-              </div>)
-          }
         </div>
+      )}
+
+      {/* 在新布局下不显示的组件 */}
+      <div className="hidden">
+        <Header
+          title={APP_INFO.title}
+          isMobile={isMobile}
+          onShowSideBar={showSidebar}
+          onCreateNewChat={() => handleConversationIdChange('-1')}
+        />
+        {!isMobile && renderSidebar()}
       </div>
     </div>
   )
