@@ -1,0 +1,424 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  username          String?  @unique
+  password          String
+  nickname          String?
+  avatar            String?
+  phone             String?
+  status            UserStatus @default(ACTIVE)
+  
+  // 邀请相关
+  inviteCode        String   @unique @default(cuid())
+  invitedBy         String?
+  inviter           User?    @relation("UserInvites", fields: [invitedBy], references: [id])
+  invitees          User[]   @relation("UserInvites")
+  
+  // 积分相关
+  credits           Int      @default(0)
+  totalRecharge     Decimal  @default(0) @db.Decimal(10, 2)
+  totalConsumption  Decimal  @default(0) @db.Decimal(10, 2)
+  vipMultiplier     Decimal? @db.Decimal(3, 2) // VIP计费乘数
+  
+  // 推荐等级
+  referralLevel     Int      @default(0)
+  referralCount     Int      @default(0)
+  
+  // 时间戳
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLoginAt       DateTime?
+  deletedAt         DateTime? // 软删除
+  
+  // 关联关系
+  userRoles         UserRole[]
+  rechargeRecords   RechargeRecord[]
+  consumptionLogs   ConsumptionLog[]
+  referralRewards   ReferralReward[]
+  systemLogs        SystemLog[]
+  notifications     UserNotification[]
+  
+  @@map("users")
+}
+
+// 用户状态枚举
+enum UserStatus {
+  ACTIVE     // 活跃
+  INACTIVE   // 非活跃
+  SUSPENDED  // 暂停
+  BANNED     // 封禁
+}
+
+// 角色表
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  description String?
+  isSystem    Boolean  @default(false) // 是否为系统角色
+  status      RoleStatus @default(ACTIVE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // 软删除
+  
+  // 关联关系
+  userRoles   UserRole[]
+  roleMenus   RoleMenu[]
+  roleApis    RoleApi[]
+  
+  @@map("roles")
+}
+
+enum RoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// 用户角色关联表
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+  
+  createdAt DateTime @default(now())
+  createdBy String?
+  
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// 菜单表
+model Menu {
+  id          String     @id @default(cuid())
+  name        String
+  path        String?
+  icon        String?
+  component   String?
+  parentId    String?
+  sort        Int        @default(0)
+  type        MenuType   @default(MENU)
+  permission  String?    // 权限标识
+  hidden      Boolean    @default(false)
+  status      MenuStatus @default(ACTIVE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // 软删除
+  
+  // 自关联
+  parent      Menu?   @relation("MenuHierarchy", fields: [parentId], references: [id])
+  children    Menu[]  @relation("MenuHierarchy")
+  
+  // 关联关系
+  roleMenus   RoleMenu[]
+  
+  @@map("menus")
+}
+
+enum MenuType {
+  DIRECTORY  // 目录
+  MENU      // 菜单
+  BUTTON    // 按钮
+}
+
+enum MenuStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// 角色菜单关联表
+model RoleMenu {
+  id     String @id @default(cuid())
+  roleId String
+  menuId String
+  
+  createdAt DateTime @default(now())
+  
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu   Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, menuId])
+  @@map("role_menus")
+}
+
+// API权限表
+model ApiPermission {
+  id          String    @id @default(cuid())
+  name        String
+  path        String
+  method      String
+  description String?
+  category    String?
+  status      ApiStatus @default(ACTIVE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // 软删除
+  
+  // 关联关系
+  roleApis    RoleApi[]
+  
+  @@unique([path, method])
+  @@map("api_permissions")
+}
+
+enum ApiStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// 角色API关联表
+model RoleApi {
+  id       String @id @default(cuid())
+  roleId   String
+  apiId    String
+  
+  createdAt DateTime @default(now())
+  
+  role     Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  api      ApiPermission @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, apiId])
+  @@map("role_apis")
+}
+
+// 充值套餐表
+model RechargePackage {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  amount      Decimal  @db.Decimal(10, 2) // 充值金额
+  credits     Int      // 获得积分
+  discount    Decimal? @db.Decimal(3, 2) // 折扣
+  validDays   Int?     // 有效天数
+  status      PackageStatus @default(ACTIVE)
+  isPopular   Boolean  @default(false)
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // 软删除
+  
+  // 关联关系
+  rechargeRecords RechargeRecord[]
+  
+  @@map("recharge_packages")
+}
+
+enum PackageStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// 充值记录表
+model RechargeRecord {
+  id          String        @id @default(cuid())
+  userId      String
+  packageId   String?
+  amount      Decimal       @db.Decimal(10, 2)
+  credits     Int
+  status      RechargeStatus @default(PENDING)
+  paymentMethod String?
+  transactionId String?
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User            @relation(fields: [userId], references: [id])
+  package     RechargePackage? @relation(fields: [packageId], references: [id])
+  referralRewards ReferralReward[]
+  
+  @@map("recharge_records")
+}
+
+enum RechargeStatus {
+  PENDING   // 待支付
+  SUCCESS   // 成功
+  FAILED    // 失败
+  CANCELLED // 取消
+}
+
+// 积分消费记录表
+model ConsumptionLog {
+  id          String @id @default(cuid())
+  userId      String
+  credits     Int    // 消费积分数
+  type        ConsumptionType
+  description String?
+  metadata    Json?  // 额外数据
+  
+  createdAt   DateTime @default(now())
+  
+  user        User @relation(fields: [userId], references: [id])
+  
+  @@map("consumption_logs")
+}
+
+enum ConsumptionType {
+  CHAT      // 聊天消费
+  UPLOAD    // 文件上传
+  API_CALL  // API调用
+  OTHER     // 其他
+}
+
+// 推荐奖励记录表
+model ReferralReward {
+  id          String @id @default(cuid())
+  userId      String // 获得奖励的用户
+  fromUserId  String // 产生奖励的用户
+  rechargeId  String // 关联的充值记录
+  amount      Decimal @db.Decimal(10, 2) // 充值金额
+  rewardRate  Decimal @db.Decimal(3, 2) // 奖励比例
+  credits     Int    // 奖励积分
+  
+  createdAt   DateTime @default(now())
+  
+  user        User @relation(fields: [userId], references: [id])
+  recharge    RechargeRecord @relation(fields: [rechargeId], references: [id])
+  
+  @@map("referral_rewards")
+}
+
+// 系统配置表
+model SystemConfig {
+  id          String @id @default(cuid())
+  key         String @unique
+  value       String
+  description String?
+  type        ConfigType @default(STRING)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_configs")
+}
+
+enum ConfigType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+// 系统公告表
+model Announcement {
+  id          String           @id @default(cuid())
+  title       String
+  content     String
+  type        AnnouncementType @default(INFO)
+  status      AnnouncementStatus @default(ACTIVE)
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  
+  // 关联关系
+  notifications UserNotification[]
+  
+  @@map("announcements")
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  ERROR
+  SUCCESS
+}
+
+enum AnnouncementStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// 用户通知表
+model UserNotification {
+  id             String @id @default(cuid())
+  userId         String
+  announcementId String?
+  title          String
+  content        String
+  type           NotificationType @default(SYSTEM)
+  isRead         Boolean @default(false)
+  
+  createdAt      DateTime @default(now())
+  readAt         DateTime?
+  
+  user           User @relation(fields: [userId], references: [id])
+  announcement   Announcement? @relation(fields: [announcementId], references: [id])
+  
+  @@map("user_notifications")
+}
+
+enum NotificationType {
+  SYSTEM    // 系统通知
+  RECHARGE  // 充值通知
+  REFERRAL  // 推荐通知
+  SECURITY  // 安全通知
+}
+
+// 系统日志表
+model SystemLog {
+  id          String  @id @default(cuid())
+  userId      String?
+  action      String
+  resource    String?
+  method      String?
+  path        String?
+  ip          String?
+  userAgent   String?
+  requestData Json?
+  responseData Json?
+  status      LogStatus @default(SUCCESS)
+  errorMessage String?
+  duration    Int?    // 执行时间(ms)
+  
+  createdAt   DateTime @default(now())
+  
+  user        User? @relation(fields: [userId], references: [id])
+  
+  @@map("system_logs")
+}
+
+enum LogStatus {
+  SUCCESS
+  ERROR
+  WARNING
+}
+
+// API调用日志表
+model ApiLog {
+  id          String @id @default(cuid())
+  userId      String?
+  path        String
+  method      String
+  statusCode  Int
+  responseTime Int   // 响应时间(ms)
+  ip          String?
+  userAgent   String?
+  requestBody Json?
+  responseBody Json?
+  errorMessage String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("api_logs")
+}
