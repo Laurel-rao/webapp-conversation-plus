@@ -656,6 +656,42 @@ const Main: FC<IMainProps> = () => {
 
   return (
     <div className='h-full flex flex-col'>
+      {/* 移动端顶部工具栏 */}
+      {isMobile && (
+        <div className="flex-shrink-0 p-4 border-b border-blue-400/20">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={showSidebar}
+              className="p-2 text-blue-200 hover:text-white rounded-lg hover:bg-white/10"
+            >
+              <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handleConversationIdChange('-1')}
+              className="p-2 text-blue-200 hover:text-white rounded-lg hover:bg-white/10"
+            >
+              <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 移动端侧边栏覆盖层 */}
+      {isMobile && isShowSidebar && (
+        <div className='fixed inset-0 z-50'
+          style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
+          onClick={hideSidebar}
+        >
+          <div className='inline-block' onClick={e => e.stopPropagation()}>
+            {renderSidebar()}
+          </div>
+        </div>
+      )}
+
       {/* 聊天配置区域 */}
       <div className="flex-shrink-0 mb-4">
         <ConfigSence
@@ -671,46 +707,21 @@ const Main: FC<IMainProps> = () => {
         />
       </div>
 
-      {/* 移动端侧边栏覆盖层 */}
-      {isMobile && isShowSidebar && (
-        <div className='fixed inset-0 z-50'
-          style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
-          onClick={hideSidebar}
-        >
-          <div className='inline-block' onClick={e => e.stopPropagation()}>
-            {renderSidebar()}
-          </div>
-        </div>
-      )}
-
       {/* 聊天内容区域 */}
       {hasSetInputs && (
         <div className='flex-1 min-h-0'>
-          <div className='h-full glass-card p-4'>
-            <div className='h-full overflow-y-auto' ref={chatListDomRef}>
-              <Chat
-                chatList={chatList}
-                onSend={handleSend}
-                onFeedback={handleFeedback}
-                isResponding={isResponding}
-                checkCanSend={checkCanSend}
-                visionConfig={visionConfig}
-              />
-            </div>
+          <div className='h-full overflow-y-auto' ref={chatListDomRef}>
+            <Chat
+              chatList={chatList}
+              onSend={handleSend}
+              onFeedback={handleFeedback}
+              isResponding={isResponding}
+              checkCanSend={checkCanSend}
+              visionConfig={visionConfig}
+            />
           </div>
         </div>
       )}
-
-      {/* 在新布局下不显示的组件 */}
-      <div className="hidden">
-        <Header
-          title={APP_INFO.title}
-          isMobile={isMobile}
-          onShowSideBar={showSidebar}
-          onCreateNewChat={() => handleConversationIdChange('-1')}
-        />
-        {!isMobile && renderSidebar()}
-      </div>
     </div>
   )
 }

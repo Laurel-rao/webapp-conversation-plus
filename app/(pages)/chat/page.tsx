@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import React from 'react'
 import AppLayout from '@/app/components/layout/AppLayout'
-import Main from '@/app/components'
+import ChatPageWrapper from '@/app/components/pages/ChatPageWrapper'
 
 type ChatProps = {
   params: any
@@ -9,11 +9,7 @@ type ChatProps = {
 
 const Chat: FC<ChatProps> = ({ params }) => {
   return (
-    <AppLayout currentPage="chat">
-      <div className="h-full">
-        <Main params={params} />
-      </div>
-    </AppLayout>
+    <ChatPageWrapper params={params} />
   )
 }
 

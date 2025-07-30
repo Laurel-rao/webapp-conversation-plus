@@ -7,9 +7,16 @@ import TopNavbar from './TopNavbar'
 type AppLayoutProps = {
   children: React.ReactNode
   currentPage?: string
+  showConversationList?: boolean
+  conversationListData?: any
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children, currentPage = 'home' }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({
+  children,
+  currentPage = 'home',
+  showConversationList = false,
+  conversationListData = null,
+}) => {
   const { t } = useTranslation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
@@ -26,14 +33,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, currentPage = 'home' })
         <Sidebar
           collapsed={isSidebarCollapsed}
           currentPage={currentPage}
+          showConversationList={showConversationList}
+          conversationListData={conversationListData}
         />
 
         {/* 主内容区域 */}
         <main
           className={`flex-1 transition-all duration-300 overflow-hidden ${isSidebarCollapsed ? 'ml-16' : 'ml-64'
-          }`}
+            }`}
         >
-          <div className="h-full p-6">
+          <div className="h-full p-4">
             <div className="h-full glass-card">
               {children}
             </div>
