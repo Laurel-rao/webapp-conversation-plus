@@ -28,26 +28,29 @@ const AppLayout: React.FC<AppLayoutProps> = ({
         isSidebarCollapsed={isSidebarCollapsed}
       />
 
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* 左侧菜单 */}
-        <Sidebar
-          collapsed={isSidebarCollapsed}
-          currentPage={currentPage}
-          showConversationList={showConversationList}
-          conversationListData={conversationListData}
-        />
+      {/* 主体容器 - 为固定导航栏留出空间 */}
+      <div className="pt-16 min-h-screen">
+        <div className="flex h-[calc(100vh-4rem)]">
+          {/* 左侧菜单 */}
+          <Sidebar
+            collapsed={isSidebarCollapsed}
+            currentPage={currentPage}
+            showConversationList={showConversationList}
+            conversationListData={conversationListData}
+          />
 
-        {/* 主内容区域 */}
-        <main
-          className={`flex-1 transition-all duration-300 overflow-hidden ${isSidebarCollapsed ? 'ml-16' : 'ml-64'
-            }`}
-        >
-          <div className="h-full p-4">
-            <div className="h-full glass-card">
-              {children}
+          {/* 主内容区域 */}
+          <main
+            className={`flex-1 transition-all duration-300 overflow-hidden ${isSidebarCollapsed ? 'pl-16' : 'pl-64'
+              }`}
+          >
+            <div className="h-full p-4">
+              <div className="h-full glass-card">
+                {children}
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   )

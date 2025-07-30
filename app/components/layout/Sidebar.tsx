@@ -146,8 +146,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 key={conversation.id}
                                                 onClick={() => conversationListData.onSelectConversation && conversationListData.onSelectConversation(conversation.id)}
                                                 className={`p-3 rounded-lg cursor-pointer transition-colors ${conversation.id === conversationListData.currentId
-                                                        ? 'bg-blue-500/20 border border-blue-400/30 text-white'
-                                                        : 'text-blue-200 hover:bg-white/10 hover:text-white'
+                                                    ? 'bg-blue-500/20 border border-blue-400/30 text-white'
+                                                    : 'text-blue-200 hover:bg-white/10 hover:text-white'
                                                     }`}
                                             >
                                                 <div className="flex items-center">
