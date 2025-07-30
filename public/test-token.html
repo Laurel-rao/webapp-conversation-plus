@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token 测试</title>
+</head>
+<body>
+    <h1>Token 验证测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testToken() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>测试结果:</h2>
+                    <p><strong>状态:</strong> ${response.status}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                if (response.status === 401) {
+                    // 如果未认证，显示登录链接
+                    document.getElementById('result').innerHTML += `
+                        <p><a href="/auth/login">点击登录</a></p>
+                        <p><strong>默认账户:</strong></p>
+                        <p>邮箱: admin@example.com</p>
+                        <p>密码: admin123456</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h2>错误:</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        // 页面加载时自动测试
+        testToken();
+    </script>
+</body>
+</html>

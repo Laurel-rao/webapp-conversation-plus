@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyPassword, generateToken, updateLastLogin } from '@/lib/auth'
+import { generateToken, updateLastLogin, verifyPassword } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
         if (!email || !password) {
             return NextResponse.json(
                 { error: 'Email and password are required' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -19,21 +20,21 @@ export async function POST(request: NextRequest) {
         const user = await prisma.user.findFirst({
             where: {
                 email,
-                deletedAt: null
+                deletedAt: null,
             },
             include: {
                 userRoles: {
                     include: {
-                        role: true
-                    }
-                }
-            }
+                        role: true,
+                    },
+                },
+            },
         })
 
         if (!user) {
             return NextResponse.json(
                 { error: 'Invalid email or password' },
-                { status: 401 }
+                { status: 401 },
             )
         }
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json(
                 { error: message },
-                { status: 403 }
+                { status: 403 },
             )
         }
 
@@ -70,24 +71,24 @@ export async function POST(request: NextRequest) {
                     method: 'POST',
                     path: '/api/auth/login',
                     status: 'ERROR',
-                    errorMessage: 'Invalid password'
-                }
+                    errorMessage: 'Invalid password',
+                },
             })
 
             return NextResponse.json(
                 { error: 'Invalid email or password' },
-                { status: 401 }
+                { status: 401 },
             )
         }
 
         // 提取用户角色
-        const roles = user.userRoles.map(ur => ur.role.name)
+        const roles = user.userRoles.map((ur: any) => ur.role.name)
 
         // 生成 JWT token
-        const token = generateToken({
+        const token = await generateToken({
             userId: user.id,
             email: user.email,
-            roles
+            roles,
         })
 
         // 更新最后登录时间
@@ -101,8 +102,8 @@ export async function POST(request: NextRequest) {
                 resource: 'auth',
                 method: 'POST',
                 path: '/api/auth/login',
-                status: 'SUCCESS'
-            }
+                status: 'SUCCESS',
+            },
         })
 
         // 返回用户信息和 token
@@ -117,9 +118,9 @@ export async function POST(request: NextRequest) {
                 credits: user.credits,
                 vipMultiplier: user.vipMultiplier,
                 roles,
-                lastLoginAt: new Date()
+                lastLoginAt: new Date(),
             },
-            token
+            token,
         })
 
         // 设置 cookie
@@ -127,12 +128,12 @@ export async function POST(request: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 // 7 days
+            maxAge: 7 * 24 * 60 * 60, // 7 days
         })
 
         return response
-
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Login error:', error)
 
         // 记录错误日志
@@ -143,13 +144,13 @@ export async function POST(request: NextRequest) {
                 method: 'POST',
                 path: '/api/auth/login',
                 status: 'ERROR',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error'
-            }
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            },
         })
 
         return NextResponse.json(
             { error: 'Internal server error' },
-            { status: 500 }
+            { status: 500 },
         )
     }
 }

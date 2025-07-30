@@ -212,7 +212,7 @@ const Main: FC<IMainProps> = () => {
       isAnswer: true,
       feedbackDisabled: true,
       isOpeningStatement: isShowPrompt,
-      suggestedQuestions: suggestedQuestions,
+      suggestedQuestions,
     }
     if (calculatedIntroduction)
       return [openStatement]
@@ -246,13 +246,13 @@ const Main: FC<IMainProps> = () => {
         setNewConversationInfo({
           name: t('app.chat.newChatDefaultName'),
           introduction,
-          suggested_questions
+          suggested_questions,
         })
         if (isNotNewConversation) {
           setExistConversationInfo({
             name: currentConversation.name || t('app.chat.newChatDefaultName'),
             introduction,
-            suggested_questions
+            suggested_questions,
           })
         }
         const prompt_variables = userInputsFormToPromptVariables(user_input_form)
