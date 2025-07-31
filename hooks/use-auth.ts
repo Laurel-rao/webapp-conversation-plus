@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type User = {
   id: string
@@ -26,7 +26,7 @@ export const useAuth = () => {
     error: null,
   })
 
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }))
 
@@ -57,11 +57,22 @@ export const useAuth = () => {
         error: error instanceof Error ? error.message : 'Unknown error',
       })
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUserInfo()
-  }, [])
+
+    // 监听存储事件，当登录/注册成功时重新获取用户信息
+    const handleStorageChange = () => {
+      fetchUserInfo()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [fetchUserInfo])
 
   const hasRole = (roleName: string): boolean => {
     return authState.user?.roles.includes(roleName) || false

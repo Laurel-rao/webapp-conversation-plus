@@ -46,6 +46,9 @@ const LoginPage: React.FC = () => {
         // 登录成功，保存用户信息到 localStorage
         localStorage.setItem('user', JSON.stringify(data.user))
 
+        // 触发存储事件，通知其他组件用户状态已更新
+        window.dispatchEvent(new Event('storage'))
+
         // 获取重定向 URL
         const urlParams = new URLSearchParams(window.location.search)
         const redirect = urlParams.get('redirect') || '/'
@@ -91,7 +94,7 @@ const LoginPage: React.FC = () => {
             {/* 邮箱输入 */}
             <div>
               <label htmlFor="email" className="block text-blue-200 text-sm font-medium mb-2">
-                                邮箱地址
+                邮箱地址
               </label>
               <input
                 type="email"
@@ -108,7 +111,7 @@ const LoginPage: React.FC = () => {
             {/* 密码输入 */}
             <div>
               <label htmlFor="password" className="block text-blue-200 text-sm font-medium mb-2">
-                                密码
+                密码
               </label>
               <input
                 type="password"
@@ -132,7 +135,7 @@ const LoginPage: React.FC = () => {
                 <span className="ml-2 text-blue-200 text-sm">记住我</span>
               </label>
               <Link href="/auth/forgot-password" className="text-cyan-300 text-sm hover:text-cyan-200 transition-colors">
-                                忘记密码？
+                忘记密码？
               </Link>
             </div>
 
@@ -149,7 +152,7 @@ const LoginPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                                    登录中...
+                    登录中...
                   </div>
                 )
                 : (
@@ -171,9 +174,9 @@ const LoginPage: React.FC = () => {
           {/* 注册链接 */}
           <div className="mt-6 text-center">
             <p className="text-blue-200">
-                            还没有账户？{' '}
+              还没有账户？{' '}
               <Link href="/auth/register" className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors">
-                                立即注册
+                立即注册
               </Link>
             </p>
           </div>
@@ -182,7 +185,7 @@ const LoginPage: React.FC = () => {
         {/* 底部信息 */}
         <div className="mt-8 text-center">
           <p className="text-blue-300 text-xs">
-                        登录即表示您同意我们的{' '}
+            登录即表示您同意我们的{' '}
             <Link href="/terms" className="text-cyan-300 hover:text-cyan-200">服务条款</Link>
             {' '}和{' '}
             <Link href="/privacy" className="text-cyan-300 hover:text-cyan-200">隐私政策</Link>

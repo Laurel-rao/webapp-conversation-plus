@@ -1,6 +1,6 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import React, { useCallback, useEffect, useState } from 'react'
+// import { useTranslation } from 'react-i18next'
 
 type SystemLog = {
   id: string
@@ -23,13 +23,16 @@ type SystemLog = {
 
 type LogsResponse = {
   logs: SystemLog[]
-  total: number
-  page: number
-  limit: number
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
 }
 
 const LogsManagement: React.FC = () => {
-  const { t } = useTranslation()
+  // const { t } = useTranslation()
   const [logs, setLogs] = useState<SystemLog[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -43,19 +46,27 @@ const LogsManagement: React.FC = () => {
     userId: '',
   })
 
-  useEffect(() => {
-    fetchLogs()
-  }, [page, filters])
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true)
+      const filterParams = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== ''),
+      )
+
+      // 转换参数名以匹配API期望
+      if (filterParams.dateFrom) {
+        filterParams.startDate = filterParams.dateFrom
+        delete filterParams.dateFrom
+      }
+      if (filterParams.dateTo) {
+        filterParams.endDate = filterParams.dateTo
+        delete filterParams.dateTo
+      }
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== ''),
-        ),
+        ...filterParams,
       })
 
       const response = await fetch(`/api/admin/system/logs?${params}`, {
@@ -65,7 +76,7 @@ const LogsManagement: React.FC = () => {
       if (response.ok) {
         const data: LogsResponse = await response.json()
         setLogs(data.logs)
-        setTotal(data.total)
+        setTotal(data.pagination.total)
       }
     }
     catch (error) {
@@ -74,14 +85,30 @@ const LogsManagement: React.FC = () => {
     finally {
       setLoading(false)
     }
-  }
+  }, [page, limit, filters])
+
+  useEffect(() => {
+    fetchLogs()
+  }, [fetchLogs])
 
   const exportLogs = async () => {
     try {
+      const filterParams = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== ''),
+      )
+
+      // 转换参数名以匹配API期望
+      if (filterParams.dateFrom) {
+        filterParams.startDate = filterParams.dateFrom
+        delete filterParams.dateFrom
+      }
+      if (filterParams.dateTo) {
+        filterParams.endDate = filterParams.dateTo
+        delete filterParams.dateTo
+      }
+
       const params = new URLSearchParams({
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== ''),
-        ),
+        ...filterParams,
         export: 'true',
       })
 
@@ -103,11 +130,12 @@ const LogsManagement: React.FC = () => {
     }
     catch (error) {
       console.error('Failed to export logs:', error)
-      alert('导出失败，请重试')
+      console.log('导出失败，请重试')
     }
   }
 
   const clearLogs = async () => {
+    // eslint-disable-next-line no-alert
     if (!confirm('确定要清空所有日志吗？此操作不可恢复！'))
       return
 
@@ -119,15 +147,15 @@ const LogsManagement: React.FC = () => {
 
       if (response.ok) {
         fetchLogs()
-        alert('日志清空成功')
+        console.log('日志清空成功')
       }
       else {
-        alert('清空失败，请重试')
+        console.log('清空失败，请重试')
       }
     }
     catch (error) {
       console.error('Failed to clear logs:', error)
-      alert('清空失败，请重试')
+      console.log('清空失败，请重试')
     }
   }
 

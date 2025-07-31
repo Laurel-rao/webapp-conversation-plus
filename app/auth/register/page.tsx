@@ -94,6 +94,9 @@ const RegisterPage: React.FC = () => {
         // 注册成功，保存用户信息
         localStorage.setItem('user', JSON.stringify(data.user))
 
+        // 触发存储事件，通知其他组件用户状态已更新
+        window.dispatchEvent(new Event('storage'))
+
         // 重定向到首页
         router.push('/')
       }
@@ -135,7 +138,7 @@ const RegisterPage: React.FC = () => {
             {/* 邮箱输入 */}
             <div>
               <label htmlFor="email" className="block text-blue-200 text-sm font-medium mb-2">
-                                邮箱地址 *
+                邮箱地址 *
               </label>
               <input
                 type="email"
@@ -152,7 +155,7 @@ const RegisterPage: React.FC = () => {
             {/* 昵称输入 */}
             <div>
               <label htmlFor="nickname" className="block text-blue-200 text-sm font-medium mb-2">
-                                昵称
+                昵称
               </label>
               <input
                 type="text"
@@ -168,7 +171,7 @@ const RegisterPage: React.FC = () => {
             {/* 密码输入 */}
             <div>
               <label htmlFor="password" className="block text-blue-200 text-sm font-medium mb-2">
-                                密码 *
+                密码 *
               </label>
               <input
                 type="password"
@@ -185,7 +188,7 @@ const RegisterPage: React.FC = () => {
             {/* 确认密码 */}
             <div>
               <label htmlFor="confirmPassword" className="block text-blue-200 text-sm font-medium mb-2">
-                                确认密码 *
+                确认密码 *
               </label>
               <input
                 type="password"
@@ -202,7 +205,7 @@ const RegisterPage: React.FC = () => {
             {/* 邀请码 */}
             <div>
               <label htmlFor="inviteCode" className="block text-blue-200 text-sm font-medium mb-2">
-                                邀请码 (可选)
+                邀请码 (可选)
               </label>
               <input
                 type="text"
@@ -227,9 +230,9 @@ const RegisterPage: React.FC = () => {
                   className="w-4 h-4 text-cyan-400 bg-white/10 border-blue-400/30 rounded focus:ring-cyan-400 focus:ring-2 mt-0.5"
                 />
                 <span className="ml-3 text-blue-200 text-sm">
-                                    我已阅读并同意{' '}
+                  我已阅读并同意{' '}
                   <Link href="/terms" className="text-cyan-300 hover:text-cyan-200 underline">
-                                        服务条款
+                    服务条款
                   </Link>
                 </span>
               </label>
@@ -243,9 +246,9 @@ const RegisterPage: React.FC = () => {
                   className="w-4 h-4 text-cyan-400 bg-white/10 border-blue-400/30 rounded focus:ring-cyan-400 focus:ring-2 mt-0.5"
                 />
                 <span className="ml-3 text-blue-200 text-sm">
-                                    我已阅读并同意{' '}
+                  我已阅读并同意{' '}
                   <Link href="/privacy" className="text-cyan-300 hover:text-cyan-200 underline">
-                                        隐私政策
+                    隐私政策
                   </Link>
                 </span>
               </label>
@@ -264,7 +267,7 @@ const RegisterPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                                    注册中...
+                    注册中...
                   </div>
                 )
                 : (
@@ -286,9 +289,9 @@ const RegisterPage: React.FC = () => {
           {/* 登录链接 */}
           <div className="mt-6 text-center">
             <p className="text-blue-200">
-                            已有账户？{' '}
+              已有账户？{' '}
               <Link href="/auth/login" className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors">
-                                立即登录
+                立即登录
               </Link>
             </p>
           </div>
