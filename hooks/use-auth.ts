@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import { api } from '@/lib/api-client'
 
 type User = {
   id: string
@@ -30,25 +31,12 @@ export const useAuth = () => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }))
 
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include',
+      const userData = await api.get('/api/auth/me')
+      setAuthState({
+        user: userData.user,
+        loading: false,
+        error: null,
       })
-
-      if (response.ok) {
-        const userData = await response.json()
-        setAuthState({
-          user: userData.user,
-          loading: false,
-          error: null,
-        })
-      }
-      else {
-        setAuthState({
-          user: null,
-          loading: false,
-          error: 'Failed to fetch user info',
-        })
-      }
     }
     catch (error) {
       setAuthState({
@@ -84,16 +72,15 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
+      await api.post('/api/auth/logout')
       setAuthState({
         user: null,
         loading: false,
         error: null,
       })
-      // 可以添加重定向到登录页的逻辑
+      // 清除本地存储
+      localStorage.removeItem('user')
+      // 重定向到登录页
       window.location.href = '/auth/login'
     }
     catch (error) {

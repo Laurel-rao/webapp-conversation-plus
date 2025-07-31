@@ -1,6 +1,7 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
 // import { useTranslation } from 'react-i18next'
+import { api, showSuccessToast } from '@/lib/api-client'
 
 type SystemLog = {
   id: string
@@ -69,15 +70,9 @@ const LogsManagement: React.FC = () => {
         ...filterParams,
       })
 
-      const response = await fetch(`/api/admin/system/logs?${params}`, {
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        const data: LogsResponse = await response.json()
-        setLogs(data.logs)
-        setTotal(data.pagination.total)
-      }
+      const data: LogsResponse = await api.get(`/api/admin/system/logs?${params}`)
+      setLogs(data.logs)
+      setTotal(data.pagination.total)
     }
     catch (error) {
       console.error('Failed to fetch logs:', error)
@@ -112,25 +107,11 @@ const LogsManagement: React.FC = () => {
         export: 'true',
       })
 
-      const response = await fetch(`/api/admin/system/logs?${params}`, {
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `system_logs_${new Date().toISOString().split('T')[0]}.csv`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      }
+      await api.download(`/api/admin/system/logs?${params}`, `system_logs_${new Date().toISOString().split('T')[0]}.csv`)
+      showSuccessToast('日志导出成功')
     }
     catch (error) {
       console.error('Failed to export logs:', error)
-      console.log('导出失败，请重试')
     }
   }
 
@@ -140,22 +121,12 @@ const LogsManagement: React.FC = () => {
       return
 
     try {
-      const response = await fetch('/api/admin/system/logs', {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        fetchLogs()
-        console.log('日志清空成功')
-      }
-      else {
-        console.log('清空失败，请重试')
-      }
+      await api.delete('/api/admin/system/logs')
+      fetchLogs()
+      showSuccessToast('日志清空成功')
     }
     catch (error) {
       console.error('Failed to clear logs:', error)
-      console.log('清空失败，请重试')
     }
   }
 

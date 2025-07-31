@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { api, showSuccessToast } from '@/lib/api-client'
 
 const RegisterPage: React.FC = () => {
   const { t } = useTranslation()
@@ -75,38 +76,28 @@ const RegisterPage: React.FC = () => {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          nickname: formData.nickname,
-          inviteCode: formData.inviteCode || undefined,
-        }),
+      const data = await api.post('/api/auth/register', {
+        email: formData.email,
+        password: formData.password,
+        nickname: formData.nickname,
+        inviteCode: formData.inviteCode || undefined,
       })
 
-      const data = await response.json()
+      // 注册成功，保存用户信息
+      localStorage.setItem('user', JSON.stringify(data.user))
 
-      if (response.ok) {
-        // 注册成功，保存用户信息
-        localStorage.setItem('user', JSON.stringify(data.user))
+      // 触发存储事件，通知其他组件用户状态已更新
+      window.dispatchEvent(new Event('storage'))
 
-        // 触发存储事件，通知其他组件用户状态已更新
-        window.dispatchEvent(new Event('storage'))
+      // 显示成功提示
+      showSuccessToast('注册成功，欢迎使用！')
 
-        // 重定向到首页
-        router.push('/')
-      }
-      else {
-        setError(data.error || '注册失败')
-      }
+      // 重定向到首页
+      router.push('/')
     }
     catch (error) {
       console.error('Register error:', error)
-      setError('网络错误，请稍后重试')
+      setError(error instanceof Error ? error.message : '注册失败')
     }
     finally {
       setLoading(false)

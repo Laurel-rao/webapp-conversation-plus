@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { api, showSuccessToast } from '@/lib/api-client'
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation()
@@ -32,37 +33,27 @@ const LoginPage: React.FC = () => {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+      const data = await api.post('/api/auth/login', formData)
 
-      const data = await response.json()
+      // 登录成功，保存用户信息到 localStorage
+      localStorage.setItem('user', JSON.stringify(data.user))
 
-      if (response.ok) {
-        // 登录成功，保存用户信息到 localStorage
-        localStorage.setItem('user', JSON.stringify(data.user))
+      // 触发存储事件，通知其他组件用户状态已更新
+      window.dispatchEvent(new Event('storage'))
 
-        // 触发存储事件，通知其他组件用户状态已更新
-        window.dispatchEvent(new Event('storage'))
+      // 显示成功提示
+      showSuccessToast('登录成功')
 
-        // 获取重定向 URL
-        const urlParams = new URLSearchParams(window.location.search)
-        const redirect = urlParams.get('redirect') || '/'
+      // 获取重定向 URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const redirect = urlParams.get('redirect') || '/'
 
-        // 重定向到目标页面
-        router.push(redirect)
-      }
-      else {
-        setError(data.error || '登录失败')
-      }
+      // 重定向到目标页面
+      router.push(redirect)
     }
     catch (error) {
       console.error('Login error:', error)
-      setError('网络错误，请稍后重试')
+      setError(error instanceof Error ? error.message : '登录失败')
     }
     finally {
       setLoading(false)
